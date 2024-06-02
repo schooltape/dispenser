@@ -1,23 +1,29 @@
 use crate::{Context, Error};
 
+/// Hello world!
 #[poise::command(slash_command)]
 pub async fn hello(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("world!").await?;
     Ok(())
 }
 
-#[poise::command(slash_command)]
+/// Returns the current gateway heartbeat latency.
+/// If the shard has just connected, this will return 0.
+#[poise::command(
+    slash_command,
+    ephemeral,
+)]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say("Pong!").await?;
+    let latency = ctx.ping().await;
+    ctx.say(format!("Pong! Latency: {} ms", latency.as_millis())).await?;
     Ok(())
 }
 
-#[poise::command(prefix_command)]
+#[poise::command(
+    prefix_command,
+    owners_only,
+)]
 pub async fn register(ctx: Context<'_>) -> Result<(), Error> {
-    if ctx.author().id == 1182451860666318928 {
-        poise::builtins::register_application_commands_buttons(ctx).await?;
-    } else {
-        ctx.say("You are not allowed to use this command!").await?;
-    }
+    poise::builtins::register_application_commands_buttons(ctx).await?;
     Ok(())
 }

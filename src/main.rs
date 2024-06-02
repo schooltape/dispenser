@@ -3,15 +3,13 @@
 mod commands;
 
 use anyhow::Context as _;
-use poise::serenity_prelude::{ClientBuilder, GatewayIntents, GuildId};
+use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_runtime::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-
-// Schooltape Guild ID
-const GUILD_ID: GuildId = GuildId::new(1109737131225649283);
+use tracing::info;
 
 pub struct Data {}
 
@@ -37,6 +35,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
             commands::register(),
             commands::ping(),
         ],
+        initialize_owners: true,
         // The global error handler for all error cases that may occur
         on_error: |error| Box::pin(on_error(error)),
         // This code is run before every command
@@ -64,11 +63,14 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
     };
 
     let framework = poise::Framework::builder()
-        .setup(move |ctx, _ready, framework| {
+        .setup(move |ctx, ready, framework| {
             Box::pin(async move {
-                println!("Logged in as {}", _ready.user.name);
+                info!("{} is connected!", ready.user.name);
                 // poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                poise::builtins::register_in_guild(ctx, &framework.options().commands, GUILD_ID).await?;
+                for guild in &ready.guilds {
+                    poise::builtins::register_in_guild(ctx, &framework.options().commands, guild.id).await?;
+                    info!("Loaded modules for guild {}", guild.id);
+                }
                 Ok(Data {})
             })
         })
