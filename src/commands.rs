@@ -2,12 +2,11 @@ use crate::{Context, Error};
 use poise::serenity_prelude as serenity;
 
 /// Sends an embed with instructions on how to install Schooltape.
-#[poise::command(
-    slash_command,
-    track_edits,
-)]
-pub async fn install(ctx: Context<'_>) -> Result<(), Error> {
-
+#[poise::command(slash_command)]
+pub async fn install(
+    ctx: Context<'_>,
+    #[description = "Browser you want instructions for"] browser: Option<std::string::String>,
+) -> Result<(),Error> {
     let author: serenity::CreateEmbedAuthor = serenity::CreateEmbedAuthor::new("Installation Guide")
             .icon_url("https://github.com/42Willow/schooltape/raw/main/assets/schooltape-logo.png")
             .url("https://github.com/42Willow/schooltape/wiki/Getting-Started#installation");
@@ -33,6 +32,26 @@ pub async fn install(ctx: Context<'_>) -> Result<(), Error> {
         "#)
         .author(author.clone());
 
+    let edge: serenity::CreateEmbed = serenity::CreateEmbed::default()
+        .title("<:edge:1246037472761217065> Edge")
+        .description(r#"
+1. Download the `Source code (zip)` from the [releases page](https://github.com/42willow/schooltape/releases/latest).
+2. Unzip the file.
+3. Navigate to `edge://extensions`
+4. Turn on __Developer Mode__ near the bottom left.
+5. Click the __Load Unpacked__ button near the top right, select the folder you downloaded and navigate to `/schooltape/src` and click ok.
+6. Scroll down until you find a heading that says __From other sources__.
+8. Done! Options can be found in the right click context menu, and use left click to toggle.
+        "#)
+        .author(author.clone());
+
+    let safari: serenity::CreateEmbed = serenity::CreateEmbed::default()
+        .title("<:safari:1246037470840094720> Safari")
+        .description(r#"
+Sorry, Safari is not supported at this time.
+        "#)
+        .author(author.clone());
+    
     let reply = {
         let components: Vec<serenity::CreateActionRow> = vec![
             serenity::CreateActionRow::SelectMenu(
@@ -49,6 +68,14 @@ pub async fn install(ctx: Context<'_>) -> Result<(), Error> {
                                 "Firefox",
                                 "firefox",
                             ),
+                            serenity::CreateSelectMenuOption::new(
+                                "Microsoft Edge",
+                                "edge",
+                            ),
+                            serenity::CreateSelectMenuOption::new(
+                                "Safari",
+                                "safari",
+                            ),
                         ]
                     )
                 }
@@ -57,8 +84,18 @@ pub async fn install(ctx: Context<'_>) -> Result<(), Error> {
             )
         ];
 
+        let browser = browser.unwrap_or_else(|| String::from("chromium"));
+
+        let embed = match browser.as_str() {
+            "chromium" => chromium.clone(),
+            "firefox" => firefox.clone(),
+            "edge" => edge.clone(),
+            "safari" => safari.clone(),
+            _ => return Err(Error::from("Invalid browser name")),
+        };
+
         poise::CreateReply::default()
-            .embed(chromium.clone())
+            .embed(embed)
             .components(components)
     };
 
@@ -79,6 +116,8 @@ pub async fn install(ctx: Context<'_>) -> Result<(), Error> {
                     match first_value.as_str() {
                         "chromium" => msg.edit(ctx, serenity::EditMessage::new().embed(chromium.clone())).await?,
                         "firefox" => msg.edit(ctx, serenity::EditMessage::new().embed(firefox.clone())).await?,
+                        "edge" => msg.edit(ctx, serenity::EditMessage::new().embed(edge.clone())).await?,
+                        "safari" => msg.edit(ctx, serenity::EditMessage::new().embed(safari.clone())).await?,
                         _ => (),
                     }
                 }
