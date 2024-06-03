@@ -2,8 +2,8 @@
 
 mod commands;
 
+use poise::serenity_prelude as serenity;
 use anyhow::Context as _;
-use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_runtime::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 
@@ -34,6 +34,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
             commands::hello(),
             commands::register(),
             commands::ping(),
+            commands::install(),
         ],
         initialize_owners: true,
         // The global error handler for all error cases that may occur
@@ -41,23 +42,17 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
         // This code is run before every command
         pre_command: |ctx| {
             Box::pin(async move {
-                println!("Executing command {}...", ctx.command().qualified_name);
+                info!("Executing command '{}'...", ctx.command().qualified_name);
             })
         },
         // This code is run after a command if it was successful (returned Ok)
         post_command: |ctx| {
             Box::pin(async move {
-                println!("Executed command {}!", ctx.command().qualified_name);
+                info!("Executed command '{}'!", ctx.command().qualified_name);
             })
         },
-        event_handler: |_ctx, event, _framework, _data| {
-            Box::pin(async move {
-                println!(
-                    "Got an event in event handler: {:?}",
-                    event.snake_case_name()
-                );
-                Ok(())
-            })
+        event_handler: |ctx, event, framework, data| {
+            Box::pin(event_handler(ctx, event, framework, data))
         },
         ..Default::default()
     };
@@ -82,10 +77,30 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
         .get("DISCORD_TOKEN")
         .context("'DISCORD_TOKEN' was not found")?;
 
-    let client = ClientBuilder::new(discord_token, GatewayIntents::non_privileged())
+    let client = serenity::ClientBuilder::new(discord_token, serenity::GatewayIntents::non_privileged())
         .framework(framework)
         .await
         .map_err(shuttle_runtime::CustomError::new)?;
 
     Ok(client.into())
+}
+
+
+async fn event_handler(
+    _ctx: &serenity::Context,
+    event: &serenity::FullEvent,
+    _framework: poise::FrameworkContext<'_, Data, Error>,
+    _data: &Data,
+) -> Result<(), Error> {
+    info!(
+        "Got an event in event handler: {:?}",
+        event.snake_case_name()
+    );
+    match event {
+        serenity::FullEvent::Ready { data_about_bot, .. } => {
+            info!("Logged in as {}", data_about_bot.user.name);
+        }
+        _ => {}
+    }
+    Ok(())
 }

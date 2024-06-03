@@ -1,4 +1,114 @@
 use crate::{Context, Error};
+use poise::serenity_prelude as serenity;
+
+/// Sends an embed with instructions on how to install Schooltape.
+#[poise::command(
+    slash_command,
+    track_edits,
+)]
+pub async fn install(ctx: Context<'_>) -> Result<(), Error> {
+
+    let author: serenity::CreateEmbedAuthor = serenity::CreateEmbedAuthor::new("Installation Guide")
+            .icon_url("https://github.com/42Willow/schooltape/raw/main/assets/schooltape-logo.png")
+            .url("https://github.com/42Willow/schooltape/wiki/Getting-Started#installation");
+        
+    let chromium: serenity::CreateEmbed = serenity::CreateEmbed::default()
+        .title("<:chromium:1246037483192582175> Chromium")
+        .description(r#"
+1. Download the `Source code (zip)` from the [releases page](https://github.com/42willow/schooltape/releases/latest).
+2. Unzip the file.
+3. Navigate to `chrome://extensions`
+4. Turn on __Developer Mode__ at the top right.
+5. Click the __Load Unpacked__ button near the top left, select the folder you downloaded and navigate to `/schooltape/src` and click ok.
+6. Done! Options can be found in the right click context menu, and use left click to toggle.
+        "#)
+        .author(author.clone());
+
+    let firefox: serenity::CreateEmbed = serenity::CreateEmbed::default()
+        .title("<:firefox:1246037481975971870> Firefox")
+        .description(r#"
+1. Download the `schooltape-X.X.X.xpi` from the [releases page](https://github.com/42willow/schooltape/releases/latest).
+2. Click install
+3. Done! Options can be found in the right click context menu, and use left click to toggle.
+        "#)
+        .author(author.clone());
+
+    let reply = {
+        let components: Vec<serenity::CreateActionRow> = vec![
+            serenity::CreateActionRow::SelectMenu(
+                serenity::CreateSelectMenu::new(
+                    "browsers",
+                    serenity::CreateSelectMenuKind::String {
+                    options: (
+                        vec![
+                            serenity::CreateSelectMenuOption::new(
+                                "Chromium",
+                                "chromium",
+                            ),
+                            serenity::CreateSelectMenuOption::new(
+                                "Firefox",
+                                "firefox",
+                            ),
+                        ]
+                    )
+                }
+                )
+                .placeholder("Select a browser")
+            )
+        ];
+
+        poise::CreateReply::default()
+            .embed(chromium.clone())
+            .components(components)
+    };
+
+    ctx.send(reply).await?;
+
+    while let Some(mci) = serenity::ComponentInteractionCollector::new(ctx)
+        .author_id(ctx.author().id)
+        .channel_id(ctx.channel_id())
+        .timeout(std::time::Duration::from_secs(120))
+        .filter(move |mci| mci.data.custom_id == "browsers")
+        .await
+    {
+        let mut msg = mci.message.clone();
+        println!("{:?}", mci.data.kind);
+        match &mci.data.kind {
+            serenity::ComponentInteractionDataKind::StringSelect { values, .. } => {
+                if let Some(first_value) = values.get(0) {
+                    match first_value.as_str() {
+                        "chromium" => msg.edit(ctx, serenity::EditMessage::new().embed(chromium.clone())).await?,
+                        "firefox" => msg.edit(ctx, serenity::EditMessage::new().embed(firefox.clone())).await?,
+                        _ => (),
+                    }
+                }
+            }
+            _ => (),
+        }
+
+        mci.create_response(ctx, serenity::CreateInteractionResponse::Acknowledge)
+            .await?;
+    }
+
+    Ok(())
+}
+
+// /// Purge a specified number of messages from the current channel.
+// #[poise::command(
+//     slash_command,
+//     owners_only,
+// )]
+// pub async fn purge(ctx: Context<'_>, #[description = "Number of messages to purge"] count: u64) -> Result<(), Error> {
+//     let messages = ctx
+//         .channel_id
+//         .messages(&ctx.discord.http, |retriever| retriever.limit(count))
+//         .await?;
+
+//     let message_ids = messages.iter().map(|m| m.id).collect::<Vec<_>>();
+//     ctx.channel_id.delete_messages(&ctx.discord.http, message_ids).await?;
+
+//     Ok(())
+// }
 
 /// Hello world!
 #[poise::command(slash_command)]
@@ -19,6 +129,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// Provides a menu to register application commands.
 #[poise::command(
     prefix_command,
     owners_only,
