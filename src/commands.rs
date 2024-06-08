@@ -41,7 +41,7 @@ pub async fn install(
 4. Turn on __Developer Mode__ near the bottom left.
 5. Click the __Load Unpacked__ button near the top right, select the folder you downloaded and navigate to `/schooltape/src` and click ok.
 6. Scroll down until you find a heading that says __From other sources__.
-8. Done! Options can be found in the right click context menu, and use left click to toggle.
+7. Done! Options can be found in the right click context menu, and use left click to toggle.
         "#)
         .author(author.clone());
 
