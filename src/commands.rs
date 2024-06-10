@@ -8,13 +8,13 @@ pub async fn install(
     #[description = "Browser you want instructions for"] browser: Option<std::string::String>,
 ) -> Result<(),Error> {
     let author: serenity::CreateEmbedAuthor = serenity::CreateEmbedAuthor::new("Installation Guide")
-            .icon_url("https://github.com/42Willow/schooltape/raw/main/assets/schooltape-logo.png")
-            .url("https://github.com/42Willow/schooltape/wiki/Getting-Started#installation");
+            .icon_url("https://github.com/schooltape/schooltape/raw/main/assets/schooltape-logo.png")
+            .url("https://github.com/schooltape/schooltape/wiki/Getting-Started#installation");
         
     let chromium: serenity::CreateEmbed = serenity::CreateEmbed::default()
         .title("<:chromium:1246037483192582175> Chromium")
         .description(r#"
-1. Download the `Source code (zip)` from the [releases page](https://github.com/42willow/schooltape/releases/latest).
+1. Download the `Source code (zip)` from the [releases page](https://github.com/schooltape/schooltape/releases/latest).
 2. Unzip the file.
 3. Navigate to `chrome://extensions`
 4. Turn on __Developer Mode__ at the top right.
@@ -26,7 +26,7 @@ pub async fn install(
     let firefox: serenity::CreateEmbed = serenity::CreateEmbed::default()
         .title("<:firefox:1246037481975971870> Firefox")
         .description(r#"
-1. Download the `schooltape-X.X.X.xpi` from the [releases page](https://github.com/42willow/schooltape/releases/latest).
+1. Download the `schooltape-X.X.X.xpi` from the [releases page](https://github.com/schooltape/schooltape/releases/latest).
 2. Click install
 3. Done! Options can be found in the right click context menu, and use left click to toggle.
         "#)
@@ -35,7 +35,7 @@ pub async fn install(
     let edge: serenity::CreateEmbed = serenity::CreateEmbed::default()
         .title("<:edge:1246037472761217065> Edge")
         .description(r#"
-1. Download the `Source code (zip)` from the [releases page](https://github.com/42willow/schooltape/releases/latest).
+1. Download the `Source code (zip)` from the [releases page](https://github.com/schooltape/schooltape/releases/latest).
 2. Unzip the file.
 3. Navigate to `edge://extensions`
 4. Turn on __Developer Mode__ near the bottom left.
